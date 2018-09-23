@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:openmensa/service/api_service.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -17,6 +20,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    var test = new ApiService();
+    test.fetchCanteens().then((canteens) {
+      debugger();
+    });
+
     return DefaultTabController(
         length: _canteens.length,
         child: Scaffold(
