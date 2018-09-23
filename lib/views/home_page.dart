@@ -1,7 +1,5 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:openmensa/service/api_service.dart';
+import 'package:openmensa/views/settings_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -20,11 +18,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    var test = new ApiService();
-    test.fetchCanteens().then((canteens) {
-      debugger();
-    });
-
     return DefaultTabController(
         length: _canteens.length,
         child: Scaffold(
@@ -49,7 +42,15 @@ class _HomePageState extends State<HomePage> {
                         value: dateChoice, child: Text(dateChoice));
                   }).toList();
                 },
-              )
+              ),
+              IconButton(
+                icon: Icon(Icons.settings),
+                onPressed: () {
+                  print('pressed');
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => SettingsPage()));
+                },
+              ),
             ],
             bottom: TabBar(
               tabs: _canteens.map((canteen) {
