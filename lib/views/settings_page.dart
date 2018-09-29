@@ -11,11 +11,11 @@ class _SettingsPageState extends State<SettingsPage> {
   final _apiService = new ApiService();
   List<Canteen> _canteens = [];
   List<Canteen> _canteensToShow = [];
+  List<Canteen> _favoriteCanteens = [];
 
   @override
   void initState() {
     super.initState();
-
     _apiService.fetchCanteens().then((canteens) {
       _canteens = canteens;
       setState(() {
@@ -41,10 +41,43 @@ class _SettingsPageState extends State<SettingsPage> {
           new Expanded(
               child: ListView(
             children: _canteensToShow.map((canteen) {
-              return ListTile(title: Text(canteen.name));
+              return _canteenTile(canteen);
             }).toList(),
           ))
         ]));
+  }
+
+  ListTile _canteenTile(Canteen canteen) {
+    if (_favoriteCanteens.contains(canteen)) {
+      return ListTile(
+        title: Text(canteen.name),
+        trailing: IconButton(
+            icon: Icon(
+              Icons.favorite,
+              color: Colors.red,
+            ),
+            onPressed: () => _removeCanteenFromFavorites(canteen)),
+      );
+    } else {
+      return ListTile(
+          title: Text(canteen.name),
+          trailing: IconButton(
+            icon: Icon(Icons.favorite),
+            onPressed: () => _addCanteenToFavorites(canteen),
+          ));
+    }
+  }
+
+  void _addCanteenToFavorites(Canteen canteen) {
+    setState(() {
+      _favoriteCanteens.add(canteen);
+    });
+  }
+
+  void _removeCanteenFromFavorites(Canteen canteen) {
+    setState(() {
+      _favoriteCanteens.remove(canteen);
+    });
   }
 
   void _searchTextChanged(String searchText) {
