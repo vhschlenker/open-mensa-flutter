@@ -53,30 +53,29 @@ class _SettingsPageState extends State<SettingsPage> {
           new Expanded(
               child: ListView(
             children: _canteensToShow.map((canteen) {
-              return _canteenTile(canteen);
+              return ListTile(
+                title: Text(canteen.name),
+                subtitle: Text(canteen.address),
+                trailing: _favoriteCanteenButton(canteen),
+              );
             }).toList(),
           ))
         ]));
   }
 
-  ListTile _canteenTile(Canteen canteen) {
+  IconButton _favoriteCanteenButton(Canteen canteen) {
     if (_favoriteCanteens.contains(canteen)) {
-      return ListTile(
-        title: Text(canteen.name),
-        trailing: IconButton(
-            icon: Icon(
-              Icons.favorite,
-              color: Colors.red,
-            ),
-            onPressed: () => _removeCanteenFromFavorites(canteen)),
-      );
+      return IconButton(
+          icon: Icon(
+            Icons.favorite,
+            color: Colors.red,
+          ),
+          onPressed: () => _removeCanteenFromFavorites(canteen));
     } else {
-      return ListTile(
-          title: Text(canteen.name),
-          trailing: IconButton(
-            icon: Icon(Icons.favorite),
-            onPressed: () => _addCanteenToFavorites(canteen),
-          ));
+      return IconButton(
+        icon: Icon(Icons.favorite),
+        onPressed: () => _addCanteenToFavorites(canteen),
+      );
     }
   }
 
