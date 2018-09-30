@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:openmensa/classes/canteen.dart';
 import 'package:openmensa/service/database_service.dart';
 import 'package:openmensa/views/settings_page.dart';
@@ -9,14 +10,17 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
-  String _selectedDate = _dateChoices[0];
+  String _selectedDate = '';
   List<Canteen> _canteens = [];
   DatabaseService db = new DatabaseService();
   TabController _canteenTabController;
+  List<String> _dateChoices = [];
 
   @override
   void initState() {
     super.initState();
+    _dateChoices = _createDateChoices();
+    _selectedDate = _dateChoices[0];
     _canteenTabController =
         new TabController(vsync: this, length: _canteens.length);
     this._loadFavoriteCanteens();
@@ -105,10 +109,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       _selectedDate = dateChoice;
     });
   }
-}
 
-const List<String> _dateChoices = const <String>[
-  'Heute (23.09)',
-  'Morgen (24.09)',
-  'Übermorgen (25.09)'
-];
+  List<String> _createDateChoices() {
+    final aDay = new Duration(days: 1);
+    var now = new DateTime.now();
+    var tomorrow = now.add(aDay);
+    var dayAfterTomorrow = tomorrow.add(aDay);
+    var formatter = new DateFormat('yyyy-MM-dd');
+    return [
+      formatter.format(now),
+      formatter.format(tomorrow),
+      formatter.format(dayAfterTomorrow)
+    ];
+  }
+}
