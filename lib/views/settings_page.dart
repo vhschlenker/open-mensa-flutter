@@ -54,15 +54,15 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           new Expanded(
-              child: ListView(
-            children: _canteensToShow.map((canteen) {
-              return ListTile(
-                title: Text(canteen.name),
-                subtitle: Text(canteen.address),
-                trailing: _favoriteCanteenButton(canteen),
-              );
-            }).toList(),
-          ))
+              child: ListView.builder(
+                  itemCount: _canteensToShow.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(_canteensToShow[index].name),
+                      subtitle: Text(_canteensToShow[index].address),
+                      trailing: _favoriteCanteenButton(_canteensToShow[index]),
+                    );
+                  }))
         ]));
   }
 
