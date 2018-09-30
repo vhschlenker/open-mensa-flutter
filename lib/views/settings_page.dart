@@ -1,10 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:objectdb/objectdb.dart';
 import 'package:openmensa/classes/canteen.dart';
 import 'package:openmensa/service/api_service.dart';
-import 'package:path_provider/path_provider.dart' as path;
+import 'package:openmensa/service/database_service.dart';
 
 class SettingsPage extends StatefulWidget {
   @override
@@ -16,7 +13,7 @@ class _SettingsPageState extends State<SettingsPage> {
   List<Canteen> _canteens = [];
   List<Canteen> _canteensToShow = [];
   List<Canteen> _favoriteCanteens = [];
-  ObjectDB db;
+  DatabaseService db = new DatabaseService();
 
   @override
   void initState() {
@@ -27,7 +24,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _canteensToShow.addAll(_canteens);
       });
     });
-    this._setUpDb();
+    this._loadFavoriteCanteens();
   }
 
   @override
@@ -41,6 +38,12 @@ class _SettingsPageState extends State<SettingsPage> {
     return Scaffold(
         appBar: AppBar(
           title: Text("Einstellungen"),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.delete_sweep),
+              onPressed: () => _clearAll(),
+            ),
+          ],
         ),
         body: Column(children: <Widget>[
           Padding(
@@ -79,19 +82,9 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  void _setUpDb() async {
-    Directory appDocDir = await path.getApplicationDocumentsDirectory();
-    String dbFilePath = [appDocDir.path, 'favorite_canteens.db'].join('/');
-    db = ObjectDB(dbFilePath);
-    db.open();
-    this._loadFavoriteCanteensFromDb();
-  }
-
-  void _loadFavoriteCanteensFromDb() async {
-    List favoriteCanteensAsMaps = await db.find({});
-    List<Canteen> favoriteCanteens = favoriteCanteensAsMaps
-        .map((CanteenAsMap) => Canteen.fromJson(CanteenAsMap))
-        .toList();
+  void _loadFavoriteCanteens() async {
+    await db.setUpDb();
+    List<Canteen> favoriteCanteens = await db.loadFavoriteCanteensFromDb();
     setState(() {
       _favoriteCanteens.addAll(favoriteCanteens);
     });
@@ -101,14 +94,21 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _favoriteCanteens.add(canteen);
     });
-    db.insert(canteen.toJson());
+    db.insertFavoriteCanteen(canteen);
   }
 
   void _removeCanteenFromFavorites(Canteen canteen) {
     setState(() {
       _favoriteCanteens.remove(canteen);
     });
-    db.remove(canteen.toJson());
+    db.removeFavoriteCanteen(canteen);
+  }
+
+  void _clearAll() {
+    setState(() {
+      _favoriteCanteens.clear();
+    });
+    db.clearAll();
   }
 
   void _searchTextChanged(String searchText) {
