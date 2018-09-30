@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:openmensa/classes/canteen.dart';
+import 'package:openmensa/service/database_service.dart';
 import 'package:openmensa/views/settings_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -6,64 +8,99 @@ class HomePage extends StatefulWidget {
   State<StatefulWidget> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   String _selectedDate = _dateChoices[0];
-  List<String> _canteens = _generateCanteens(10);
+  List<Canteen> _canteens = [];
+  DatabaseService db = new DatabaseService();
+  TabController _canteenTabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _canteenTabController =
+        new TabController(vsync: this, length: _canteens.length);
+    this._loadFavoriteCanteens();
+  }
+
+  @override
+  void dispose() {
+    _canteenTabController.dispose();
+    db.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: new Text('OpenMensa'),
+        actions: <Widget>[
+          new PopupMenuButton(
+            child: new Padding(
+              padding: new EdgeInsets.only(right: 24.0),
+              child: new Center(
+                  child: new Text(
+                _selectedDate,
+                style: new TextStyle(fontWeight: FontWeight.bold),
+              )),
+            ),
+            onSelected: _selectDate,
+            itemBuilder: (BuildContext context) {
+              return _dateChoices.where((choice) {
+                return choice != _selectedDate;
+              }).map((String dateChoice) {
+                return PopupMenuItem(
+                    value: dateChoice, child: Text(dateChoice));
+              }).toList();
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              _navigateSettingsScreen(context);
+            },
+          ),
+        ],
+        bottom: TabBar(
+          controller: _canteenTabController,
+          tabs: _canteens.map((canteen) {
+            return Tab(text: canteen.name);
+          }).toList(),
+          isScrollable: true,
+        ),
+      ),
+      body: TabBarView(
+        controller: _canteenTabController,
+        children: _canteens.map((canteen) {
+          return Center(child: Text(canteen.name));
+        }).toList(),
+      ),
+    );
+  }
+
+  void _navigateSettingsScreen(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SettingsPage()),
+    );
+    _loadFavoriteCanteens();
+  }
+
+  void _loadFavoriteCanteens() async {
+    await db.setUpDb();
+    List<Canteen> favoriteCanteens = await db.loadFavoriteCanteensFromDb();
+    _canteens.clear();
+    _canteens.addAll(favoriteCanteens);
+    setState(() {
+      _canteenTabController =
+          new TabController(vsync: this, length: _canteens.length);
+    });
+  }
 
   void _selectDate(String dateChoice) {
     setState(() {
       _selectedDate = dateChoice;
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-        length: _canteens.length,
-        child: Scaffold(
-          appBar: AppBar(
-            title: new Text('OpenMensa'),
-            actions: <Widget>[
-              new PopupMenuButton(
-                child: new Padding(
-                  padding: new EdgeInsets.only(right: 24.0),
-                  child: new Center(
-                      child: new Text(
-                    _selectedDate,
-                    style: new TextStyle(fontWeight: FontWeight.bold),
-                  )),
-                ),
-                onSelected: _selectDate,
-                itemBuilder: (BuildContext context) {
-                  return _dateChoices.where((choice) {
-                    return choice != _selectedDate;
-                  }).map((String dateChoice) {
-                    return PopupMenuItem(
-                        value: dateChoice, child: Text(dateChoice));
-                  }).toList();
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.settings),
-                onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => SettingsPage()));
-                },
-              ),
-            ],
-            bottom: TabBar(
-              tabs: _canteens.map((canteen) {
-                return Tab(text: canteen);
-              }).toList(),
-              isScrollable: true,
-            ),
-          ),
-          body: TabBarView(
-            children: _canteens.map((canteen) {
-              return Center(child: Text(canteen));
-            }).toList(),
-          ),
-        ));
   }
 }
 
@@ -72,11 +109,3 @@ const List<String> _dateChoices = const <String>[
   'Morgen (24.09)',
   'Übermorgen (25.09)'
 ];
-
-List<String> _generateCanteens(int count) {
-  var canteensList = List<String>(count);
-  for (var i = 0; i < count; i++) {
-    canteensList[i] = 'Mensa $i';
-  }
-  return canteensList;
-}
