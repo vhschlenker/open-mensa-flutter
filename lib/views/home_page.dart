@@ -12,17 +12,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  final DatabaseService db = new DatabaseService();
+  final _apiService = new ApiService();
+
+  final List<Canteen> _canteens = [];
+  final List<String> _dateChoices = [];
+  final List<Meal> _displayedMeals = [];
+
   String _selectedDate = '';
-  List<Canteen> _canteens = [];
-  DatabaseService db = new DatabaseService();
   TabController _canteenTabController;
-  List<String> _dateChoices = [];
-  List<Meal> _displayedMeals = [];
 
   @override
   void initState() {
     super.initState();
-    _dateChoices = _createDateChoices();
+    _dateChoices.addAll(_createDateChoices());
     _selectedDate = _dateChoices[0];
     _canteenTabController =
         new TabController(vsync: this, length: _canteens.length);
@@ -72,7 +75,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _fetchMeals() async {
-    final _apiService = new ApiService();
     var _selectedCanteen = _canteens[_canteenTabController.index];
     var displayedMeals = await _apiService.fetchMeals(
         _selectedCanteen.id.toString(), _selectedDate);

@@ -10,18 +10,19 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final _apiService = new ApiService();
-  List<Canteen> _canteens = [];
-  List<Canteen> _canteensToShow = [];
-  List<Canteen> _favoriteCanteens = [];
-  DatabaseService db = new DatabaseService();
+  final DatabaseService db = new DatabaseService();
+
+  final List<Canteen> _canteens = [];
+  final List<Canteen> _canteensToShow = [];
+  final List<Canteen> _favoriteCanteens = [];
 
   @override
   void initState() {
     super.initState();
     _apiService.fetchCanteens().then((canteens) {
-      _canteens = canteens;
+      _canteens.addAll(canteens);
       setState(() {
-        _canteensToShow.addAll(_canteens);
+        _canteensToShow.addAll(canteens);
       });
     });
     this._loadFavoriteCanteens();
