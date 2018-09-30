@@ -9,6 +9,7 @@ class Canteen {
   final String name, address;
   @JsonKey(nullable: true)
   final List<double> coordinates;
+
   Canteen({this.id, this.name, this.address, this.coordinates});
 
   factory Canteen.fromJson(Map<String, dynamic> json) =>

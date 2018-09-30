@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:openmensa/classes/canteen.dart';
+import 'package:openmensa/classes/meal.dart';
+import 'package:openmensa/service/api_service.dart';
 import 'package:openmensa/service/database_service.dart';
 import 'package:openmensa/views/settings_page.dart';
 
@@ -15,6 +17,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   DatabaseService db = new DatabaseService();
   TabController _canteenTabController;
   List<String> _dateChoices = [];
+  List<Meal> _displayedMeals = [];
 
   @override
   void initState() {
@@ -23,6 +26,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _selectedDate = _dateChoices[0];
     _canteenTabController =
         new TabController(vsync: this, length: _canteens.length);
+    _canteenTabController.addListener(_fetchMeals);
     this._loadFavoriteCanteens();
   }
 
@@ -58,10 +62,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       body: TabBarView(
         controller: _canteenTabController,
         children: _canteens.map((canteen) {
-          return Center(child: Text(canteen.name));
+          return ListView(
+              children: _displayedMeals.map((meal) {
+            return ListTile(title: Text(meal.name));
+          }).toList());
         }).toList(),
       ),
     );
+  }
+
+  void _fetchMeals() async {
+    final _apiService = new ApiService();
+    var _selectedCanteen = _canteens[_canteenTabController.index];
+    var displayedMeals = await _apiService.fetchMeals(
+        _selectedCanteen.id.toString(), _selectedDate);
+    _displayedMeals.clear();
+    setState(() {
+      _displayedMeals.addAll(displayedMeals);
+    });
   }
 
   PopupMenuButton _createDateSelector() {
@@ -101,13 +119,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     setState(() {
       _canteenTabController =
           new TabController(vsync: this, length: _canteens.length);
+      _canteenTabController.addListener(_fetchMeals);
     });
+    _fetchMeals();
   }
 
   void _selectDate(String dateChoice) {
     setState(() {
       _selectedDate = dateChoice;
     });
+    _fetchMeals();
   }
 
   List<String> _createDateChoices() {
