@@ -5,6 +5,7 @@ import 'package:openmensa/classes/meal.dart';
 import 'package:openmensa/service/api_service.dart';
 import 'package:openmensa/service/database_service.dart';
 import 'package:openmensa/views/settings_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -48,6 +49,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         actions: <Widget>[
           _createDateSelector(),
           IconButton(
+            icon: Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    var _selectedCanteen =
+                        _canteens[_canteenTabController.index];
+                    return new AlertDialog(
+                      title: Text(_selectedCanteen.name),
+                      contentPadding:
+                          const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 16.0),
+                      content: new Text(_selectedCanteen.address),
+                      actions: <Widget>[
+                        new FlatButton(
+                            child: new Text('Auf OpenStreetMap öffnen'),
+                            onPressed: () => _launchCanteenPositionURL(
+                                _selectedCanteen.coordinates)),
+                        new FlatButton(
+                          child: new Text('Schließen'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  });
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.settings),
             onPressed: () {
               _navigateSettingsScreen(context);
@@ -75,6 +105,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         }).toList(),
       ),
     );
+  }
+
+  void _launchCanteenPositionURL(List<double> coordinates) async {
+    var url = 'https://www.openstreetmap.org/?mlat=' +
+        coordinates[0].toString() +
+        '&mlon=' +
+        coordinates[1].toString();
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   void _fetchMeals() async {
