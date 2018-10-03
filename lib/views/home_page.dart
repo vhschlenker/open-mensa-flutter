@@ -16,16 +16,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final _apiService = new ApiService();
 
   final List<Canteen> _canteens = [];
-  final List<String> _dateChoices = [];
+  final List<DateTime> _dateChoices = [];
   final List<Meal> _displayedMeals = [];
 
-  String _selectedDate = '';
+  DateTime _selectedDate = DateTime.now();
   TabController _canteenTabController;
 
   @override
   void initState() {
     super.initState();
-    _dateChoices.addAll(_createDateChoices());
+    _dateChoices.addAll(_createDateChoices(7));
     _selectedDate = _dateChoices[0];
     _canteenTabController =
         new TabController(vsync: this, length: _canteens.length);
@@ -117,7 +117,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         padding: new EdgeInsets.only(right: 24.0),
         child: new Center(
             child: new Text(
-          _selectedDate,
+          _getFormattedDateTime(_selectedDate),
           style: new TextStyle(fontWeight: FontWeight.bold),
         )),
       ),
@@ -125,8 +125,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       itemBuilder: (BuildContext context) {
         return _dateChoices.where((choice) {
           return choice != _selectedDate;
-        }).map((String dateChoice) {
-          return PopupMenuItem(value: dateChoice, child: Text(dateChoice));
+        }).map((dateChoice) {
+          return PopupMenuItem(
+              value: dateChoice,
+              child: Text(_getFormattedDateTime(dateChoice)));
         }).toList();
       },
     );
@@ -153,23 +155,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _fetchMeals();
   }
 
-  void _selectDate(String dateChoice) {
+  void _selectDate(DateTime dateChoice) {
     setState(() {
       _selectedDate = dateChoice;
     });
     _fetchMeals();
   }
 
-  List<String> _createDateChoices() {
-    final aDay = new Duration(days: 1);
-    var now = new DateTime.now();
-    var tomorrow = now.add(aDay);
-    var dayAfterTomorrow = tomorrow.add(aDay);
-    var formatter = new DateFormat('yyyy-MM-dd');
-    return [
-      formatter.format(now),
-      formatter.format(tomorrow),
-      formatter.format(dayAfterTomorrow)
-    ];
+  String _getFormattedDateTime(DateTime dateTime) {
+    var formatter = new DateFormat('E dd.MM');
+    return formatter.format(dateTime);
+  }
+
+  List<DateTime> _createDateChoices(int length) {
+    final now = DateTime.now();
+    List<DateTime> returnList = [];
+    for (int i = 0; i < length; i++) {
+      returnList.add(now.add(Duration(days: i)));
+    }
+    return returnList;
   }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:openmensa/classes/canteen.dart';
 import 'package:openmensa/classes/meal.dart';
 
@@ -25,9 +26,14 @@ class ApiService {
     return returnList;
   }
 
-  Future<List<Meal>> fetchMeals(String canteenId, String dayDate) async {
-    final response = await http.get(
-        _endpoint + '/canteens/' + canteenId + '/days/' + dayDate + '/meals');
+  Future<List<Meal>> fetchMeals(String canteenId, DateTime dayDate) async {
+    var formatter = new DateFormat('yyyy-MM-dd');
+    final response = await http.get(_endpoint +
+        '/canteens/' +
+        canteenId +
+        '/days/' +
+        formatter.format(dayDate) +
+        '/meals');
     if (response.statusCode == 404) {
       return [];
     }
