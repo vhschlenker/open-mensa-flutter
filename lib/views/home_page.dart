@@ -65,10 +65,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       body: TabBarView(
         controller: _canteenTabController,
         children: _canteens.map((canteen) {
-          return ListView(
-              children: _displayedMeals.map((meal) {
-            return ListTile(title: Text(meal.name));
-          }).toList());
+          return ListView.separated(
+              itemCount: _displayedMeals.length,
+              separatorBuilder: (BuildContext context, int index) =>
+                  new Divider(),
+              itemBuilder: (BuildContext context, int index) {
+                return _createMealsListTile(_displayedMeals[index]);
+              });
         }).toList(),
       ),
     );
@@ -82,6 +85,30 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     setState(() {
       _displayedMeals.addAll(displayedMeals);
     });
+  }
+
+  ListTile _createMealsListTile(Meal meal) {
+    return ListTile(
+      title: Text(meal.name),
+      subtitle: Text(meal.category),
+      trailing: Column(
+        children: <Widget>[
+          Text(meal.getPupilFormattedPricing()),
+          Text(meal.getStudentFormattedPricing()),
+          Text(meal.getEmployeesFormattedPricing()),
+          Text(meal.getOthersFormattedPricing())
+        ],
+      ),
+      onTap: () => showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return new SimpleDialog(
+                title: const Text('Notes'),
+                contentPadding:
+                    const EdgeInsets.fromLTRB(24.0, 12.0, 0.0, 16.0),
+                children: meal.notes.map((note) => Text(note)).toList());
+          }),
+    );
   }
 
   PopupMenuButton _createDateSelector() {
