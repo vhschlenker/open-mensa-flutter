@@ -34,7 +34,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _selectedDate = _dateChoices[0];
     _canteenTabController =
         new TabController(vsync: this, length: _canteens.length);
-    _canteenTabController.addListener(_fetchMeals);
+    _canteenTabController.addListener(() {
+      if (_canteenTabController.indexIsChanging) {
+        _fetchMeals();
+      }
+    });
     this._loadFavoriteCanteens();
   }
 
@@ -228,7 +232,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     setState(() {
       _canteenTabController =
           new TabController(vsync: this, length: _canteens.length);
-      _canteenTabController.addListener(_fetchMeals);
+      _canteenTabController.addListener(() {
+        if (_canteenTabController.indexIsChanging) {
+          _fetchMeals();
+        }
+      });
     });
     _fetchMeals();
   }
