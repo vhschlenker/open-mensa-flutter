@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:openmensa/classes/canteen.dart';
@@ -22,6 +24,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   DateTime _selectedDate = DateTime.now();
   TabController _canteenTabController;
+  bool _loading = true;
+  StreamSubscription<List> _mealSub;
 
   @override
   void initState() {
@@ -95,13 +99,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       body: TabBarView(
         controller: _canteenTabController,
         children: _canteens.map((canteen) {
-          return ListView.separated(
-              itemCount: _displayedMeals.length,
-              separatorBuilder: (BuildContext context, int index) =>
-                  new Divider(),
-              itemBuilder: (BuildContext context, int index) {
-                return _createMealsListTile(_displayedMeals[index]);
-              });
+          return _createMealsView(canteen);
         }).toList(),
       ),
     );
@@ -120,13 +118,51 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _fetchMeals() async {
-    var _selectedCanteen = _canteens[_canteenTabController.index];
-    var displayedMeals = await _apiService.fetchMeals(
-        _selectedCanteen.id.toString(), _selectedDate);
-    _displayedMeals.clear();
     setState(() {
-      _displayedMeals.addAll(displayedMeals);
+      _loading = true;
     });
+    _mealSub?.cancel();
+    var _selectedCanteen = _canteens[_canteenTabController.index];
+    _mealSub = _apiService
+        .fetchMeals(_selectedCanteen.id.toString(), _selectedDate)
+        .asStream()
+        .listen((List<Meal> displayedMeals) {
+      _displayedMeals.clear();
+      _displayedMeals.addAll(displayedMeals);
+      setState(() {
+        _loading = false;
+      });
+    });
+  }
+
+  Widget _createMealsView(Canteen canteen) {
+    if (_displayedMeals.isNotEmpty && !_loading) {
+      return ListView.separated(
+          itemCount: _displayedMeals.length,
+          separatorBuilder: (BuildContext context, int index) => new Divider(),
+          itemBuilder: (BuildContext context, int index) {
+            return _createMealsListTile(_displayedMeals[index]);
+          });
+    } else if (_loading) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          const Padding(
+              padding: EdgeInsets.only(bottom: 24.0),
+              child: const CircularProgressIndicator()),
+          RaisedButton.icon(
+            onPressed: _fetchMeals,
+            icon: Icon(Icons.refresh),
+            label: const Text('Neu laden'),
+            color: Theme.of(context).accentColor,
+            textColor: Theme.of(context).accentTextTheme.button.color,
+          )
+        ],
+      );
+    } else {
+      return const Center(
+          child: const Text("Keine Gerichte für den gewählten Tag gefunden"));
+    }
   }
 
   ListTile _createMealsListTile(Meal meal) {
