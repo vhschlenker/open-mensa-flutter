@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:openmensa/classes/canteen.dart';
 import 'package:openmensa/classes/meal.dart';
+import 'package:openmensa/classes/price_types.dart';
 import 'package:openmensa/service/api_service.dart';
 import 'package:openmensa/service/database_service.dart';
 import 'package:openmensa/views/settings_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
@@ -26,6 +28,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   TabController _canteenTabController;
   bool _loading = true;
   StreamSubscription<List> _mealSub;
+  SharedPreferences _prefs;
 
   @override
   void initState() {
@@ -38,6 +41,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       if (_canteenTabController.indexIsChanging) {
         _fetchMeals();
       }
+    });
+    SharedPreferences.getInstance().then((sharedPreferences) {
+      setState(() {
+        _prefs = sharedPreferences;
+      });
     });
     this._loadFavoriteCanteens();
   }
@@ -173,24 +181,36 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return ListTile(
       title: Text(meal.name),
       subtitle: Text(meal.category),
-      trailing: Column(
-        children: <Widget>[
-          Text(meal.getPupilFormattedPricing()),
-          Text(meal.getStudentFormattedPricing()),
-          Text(meal.getEmployeesFormattedPricing()),
-          Text(meal.getOthersFormattedPricing())
-        ],
-      ),
+      trailing: _displayPrices(meal),
       onTap: () => showDialog(
           context: context,
           builder: (BuildContext context) {
             return new SimpleDialog(
-                title: const Text('Notes'),
+                title: const Text('Anmerkungen'),
                 contentPadding:
                     const EdgeInsets.fromLTRB(24.0, 12.0, 0.0, 16.0),
                 children: meal.notes.map((note) => Text(note)).toList());
           }),
     );
+  }
+
+  Column _displayPrices(Meal meal) {
+    List<Text> returnList = [];
+    if (_prefs != null) {
+      if (_prefs.getBool(PriceTypes.pupil) ?? true) {
+        returnList.add(Text(meal.getPupilFormattedPricing()));
+      }
+      if (_prefs.getBool(PriceTypes.student) ?? true) {
+        returnList.add(Text(meal.getStudentFormattedPricing()));
+      }
+      if (_prefs.getBool(PriceTypes.employees) ?? true) {
+        returnList.add(Text(meal.getEmployeesFormattedPricing()));
+      }
+      if (_prefs.getBool(PriceTypes.other) ?? true) {
+        returnList.add(Text(meal.getOthersFormattedPricing()));
+      }
+    }
+    return Column(children: returnList);
   }
 
   PopupMenuButton _createDateSelector() {
