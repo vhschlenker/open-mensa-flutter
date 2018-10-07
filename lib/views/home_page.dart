@@ -67,37 +67,39 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           IconButton(
             icon: Icon(Icons.info_outline),
             onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    var _selectedCanteen =
-                        _canteens[_canteenTabController.index];
-                    return new AlertDialog(
-                      title: Text(_selectedCanteen.name),
-                      contentPadding:
-                          const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 16.0),
-                      content: new Text(_selectedCanteen.address),
-                      actions: <Widget>[
-                        new FlatButton(
-                            child: new Text('Auf OpenStreetMap öffnen'),
+              if (_currentCanteenExists()) {
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      var _selectedCanteen =
+                          _canteens[_canteenTabController.index];
+                      return new AlertDialog(
+                        title: Text(_selectedCanteen.name),
+                        contentPadding:
+                            const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 16.0),
+                        content: new Text(_selectedCanteen.address),
+                        actions: <Widget>[
+                          new FlatButton(
+                              child: new Text('Auf OpenStreetMap öffnen'),
+                              onPressed: () {
+                                if (_selectedCanteen.coordinates != null) {
+                                  _launchCanteenCoordinatesURL(
+                                      _selectedCanteen.coordinates);
+                                } else {
+                                  _launchCanteenPositionURL(
+                                      _selectedCanteen.address);
+                                }
+                              }),
+                          new FlatButton(
+                            child: new Text('Schließen'),
                             onPressed: () {
-                              if (_selectedCanteen.coordinates != null) {
-                                _launchCanteencoordinatesURL(
-                                    _selectedCanteen.coordinates);
-                              } else {
-                                _launchCanteenPositionURL(
-                                    _selectedCanteen.address);
-                              }
-                            }),
-                        new FlatButton(
-                          child: new Text('Schließen'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    );
-                  });
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    });
+              }
             },
           ),
           IconButton(
@@ -124,7 +126,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  void _launchCanteencoordinatesURL(List<double> coordinates) async {
+  void _launchCanteenCoordinatesURL(List<double> coordinates) async {
     var url = 'https://www.openstreetmap.org/?mlat=' +
         coordinates[0].toString() +
         '&mlon=' +
@@ -147,21 +149,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   void _fetchMeals() async {
-    setState(() {
-      _loading = true;
-    });
-    _mealSub?.cancel();
-    var _selectedCanteen = _canteens[_canteenTabController.index];
-    _mealSub = _apiService
-        .fetchMeals(_selectedCanteen.id.toString(), _selectedDate)
-        .asStream()
-        .listen((List<Meal> displayedMeals) {
-      _displayedMeals.clear();
-      _displayedMeals.addAll(displayedMeals);
+    if (_currentCanteenExists()) {
       setState(() {
-        _loading = false;
+        _loading = true;
       });
-    });
+      _mealSub?.cancel();
+      var _selectedCanteen = _canteens[_canteenTabController.index];
+      _mealSub = _apiService
+          .fetchMeals(_selectedCanteen.id.toString(), _selectedDate)
+          .asStream()
+          .listen((List<Meal> displayedMeals) {
+        _displayedMeals.clear();
+        _displayedMeals.addAll(displayedMeals);
+        setState(() {
+          _loading = false;
+        });
+      });
+    }
+  }
+
+  bool _currentCanteenExists() {
+    return _canteens.isNotEmpty &&
+        _canteenTabController.index < _canteens.length;
   }
 
   Widget _createMealsView(Canteen canteen) {
