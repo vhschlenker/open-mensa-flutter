@@ -80,8 +80,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       actions: <Widget>[
                         new FlatButton(
                             child: new Text('Auf OpenStreetMap öffnen'),
-                            onPressed: () => _launchCanteenPositionURL(
-                                _selectedCanteen.coordinates)),
+                            onPressed: () {
+                              if (_selectedCanteen.coordinates != null) {
+                                _launchCanteencoordinatesURL(
+                                    _selectedCanteen.coordinates);
+                              } else {
+                                _launchCanteenPositionURL(
+                                    _selectedCanteen.address);
+                              }
+                            }),
                         new FlatButton(
                           child: new Text('Schließen'),
                           onPressed: () {
@@ -117,11 +124,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  void _launchCanteenPositionURL(List<double> coordinates) async {
+  void _launchCanteencoordinatesURL(List<double> coordinates) async {
     var url = 'https://www.openstreetmap.org/?mlat=' +
         coordinates[0].toString() +
         '&mlon=' +
         coordinates[1].toString();
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  void _launchCanteenPositionURL(String address) async {
+    var url =
+        'https://www.openstreetmap.org/search?query=' + Uri.encodeFull(address);
     if (await canLaunch(url)) {
       await launch(url);
     } else {
