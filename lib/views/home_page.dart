@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dynamic_theme/dynamic_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:openmensa/classes/canteen.dart';
@@ -61,7 +62,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: new Text('OpenMensa'),
+        title: GestureDetector(
+            onLongPress: () {
+              DynamicTheme.of(context).setBrightness(
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Brightness.light
+                      : Brightness.dark);
+            },
+            child: Text("OpenMensa")),
         actions: <Widget>[
           _createDateSelector(),
           IconButton(
