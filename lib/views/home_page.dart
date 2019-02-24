@@ -83,12 +83,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           _canteens[_canteenTabController.index];
                       return new AlertDialog(
                         title: Text(_selectedCanteen.name),
-                        contentPadding:
-                            const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 16.0),
                         content: new Text(_selectedCanteen.address),
                         actions: <Widget>[
                           new FlatButton(
-                              child: new Text('Auf OpenStreetMap öffnen'),
+                              child: new Text('OpenStreetMap'),
                               onPressed: () {
                                 if (_selectedCanteen.coordinates != null) {
                                   _launchCanteenCoordinatesURL(
